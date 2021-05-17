@@ -5,9 +5,8 @@ Creating new content for the Subsrate developer hub and taking the best of Subst
 The latest website can be found [here](https://substrate-developer-hub.github.io/substrate-how-to-guides/)
 
 ## Generate the site locally
-
+From this directory:
 ```bash
-cd how-to-substrate/
 yarn install
 yarn start
 ```
