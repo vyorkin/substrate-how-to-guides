@@ -1,47 +1,64 @@
 ---
 sidebar_position: 4
-keywords: pallet design, intermediate, runtime
+keywords: pallet design, intermediate, runtime, child trie
 ---
 
 # Simple crowdfund
-_WIP_
 
-_How to get the core functionality of a crowdfunding application in a single pallet._
+_Using a child trie provides two advantages over using standard storage. First, it allows for 
+removing the entirety of the trie is a single storage write when the fund is dispensed or 
+dissolved. Second, it allows any contributor to prove that they contributed using a Merkle Proof._
 ## Goal
 
 Build a pallet that controls multiple token accounts, storing data in child storage.
-
 
 ## Use cases
 
 A simple on-chain crowdfunding app for participants to pool funds towards a common goal.
 ## Overview
 
-Use one trie for each active crowdfund.
-
-Any user can start a crowdfund by specifying a goal amount for the crowdfund, an end time, and a beneficiary who will 
+This guide demonstrates how to use one trie for each active crowdfund. Any user can start a crowdfund by 
+specifying a goal amount for the crowdfund, an end time, and a beneficiary who will 
 receive the pooled funds if the goal is reached by the end time. If the fund is not successful, it enters into a 
 retirement period when contributors can reclaim their pledged funds. Finally, an unsuccessful fund can be dissolved, 
 sending any remaining tokens to the user who dissolves it.
 
+>**Note:** This guide assumes that developers know how to create their own `Errors` and `Events` according to the pallet logic they're creating. 
 
+To follow this guide from scratch, use the template pallet with importing the following dependencies
+which we'll be needing:
+
+```rust
+    use frame_support::{pallet_prelude::*, ensure, storage::child,
+		traits::{Currency, ExistenceRequirement, Get, ReservableCurrency, WithdrawReasons},
+		sp_runtime::{traits::{AccountIdConversion, Saturating, Zero, Hash},
+		ModuleId}
+	};
+	use frame_system::{pallet_prelude::*, ensure_signed};
+	use super::*;
+```
 ## Steps
 
 ### 1. Declaring your pallet's configuration traits
-In addition to the ubiquitous `Event` type, this pallet requires a `Currency` trait as well as:
-- `SubmissionDeposit` - the amount to be held on deposit by the owner of a crowdfund
-- `MinContribution` - the minimum amount that may be contributed into a crowdfund.
-- `RetirementPeriod` - the period of time (in blocks) after an unsuccessful crowdfund ending during which contributors are able to withdraw their funds.
+In addition to the ubiquitous `Event` type, this pallet will need:
+
+- `Currency`. The currency in which the crowdfunds will be denominated.
+- `SubmissionDeposit`. The amount to be held on deposit by the owner of a crowdfund.
+- `MinContribution`. The minimum amount that may be contributed into a crowdfund.
+- `RetirementPeriod`. The period of time in blocks during which contributors are able to 
+withdraw their funds after an unsuccessful crowdfund ending.
 
 ```rust
 /// The pallet's configuration trait
-pub trait Config: frame_system::Config {
-    type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
-    type Currency: ReservableCurrency<Self::AccountId>;
-    type SubmissionDeposit: Get<BalanceOf<Self>>;
-    type MinContribution: Get<BalanceOf<Self>>;
-    type RetirementPeriod: Get<Self::BlockNumber>;
-}
+	#[pallet::config]
+    pub trait Config: frame_system::Config {
+
+        type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type Currency: ReservableCurrency<Self::AccountId>;
+		type SubmissionDeposit: Get<BalanceOf<Self>>;
+		type MinContribution: Get<BalanceOf<Self>>;
+		type RetirementPeriod: Get<Self::BlockNumber>;
+	}
 ```
 ### 2. Create a custom metadata struct
 
@@ -65,37 +82,47 @@ pub struct FundInfo<AccountId, Balance, BlockNumber> {
 ```
 ### 3. Declare your storage items
 
-Create one storage item to track the number of funds and a second to map that index to `FundInfo`. This will also store data about
-which users have contributed and how many funds they contributed: 
+Our storage items will need to keep track of which user contributed to what fund as well as how much they contributed. First, deine the following types which will be used to declare our storage items:
 
 ```rust
-#[pallet:storage]
-#[pallet::getter(fn funds)]
-pub(super) type Funds<T: Config> as ChildTrie = StorageMap<
-		_, 
-		Blake2_128Concat, 
-		T::AccountId, 
-		T::Balance,
-		ValueQuery
-		>;
-
-#[pallet:storgae]
-#[pallet::getter(fn fund_count)]
-pub type FundCount<T> as ChildTrie = StorageValue<_, u32>;
+pub type FundIndex = u32;
+type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
+type BalanceOf<T> = <<T as Config>::Currency as Currency<AccountIdOf<T>>>::Balance;
+type FundInfoOf<T> =
+		FundInfo<AccountIdOf<T>, BalanceOf<T>, <T as frame_system::Config>::BlockNumber>;
 ```
-> Note: The use of the child trie provides two advantages over using standard storage. First, it allows for removing the entirety 
-of the trie is a single storage write when the fund is dispensed or dissolved. Second, it allows any contributor to prove that 
-they contributed using a Merkle Proof.
+Now, use those types to create one `StorageMap` item that tracks the funds by index and a second, `StorageValue`, that keeps track of `FundIndex`:
 
-### 4. Implement the Child Trie API
+```rust
+#[pallet::storage]
+	#[pallet::getter(fn funds)]
+	/// Info on all of the funds.
+	pub(super) type Funds<T: Config> = StorageMap
+	<	_, 
+		Blake2_128Concat, 
+		FundIndex, 
+		FundInfoOf<T>,
+		OptionQuery,
+	>;
 
-Write the following helper functions in a `impl<T: Config> Module<T>` block:
-- pub fn contribution_put(...) - Record a contribution in the associated child trie.
-- pub fn contribution_get(...) - Lookup a contribution in the associated child trie.
-- pub fn contribution_kill(...) - Remove a contribution from an associated child trie.
-- pub fn crowdfund_kill(...) - Remove the entire record of contributions in the associated child trie in a single storage write.
+	#[pallet::storage]
+	#[pallet::getter(fn fund_count)]
+	/// The total number of funds that have so far been allocated.
+	pub(super) type FundCount<T: Config> = StorageValue<_, FundIndex, ValueQuery>;
+```
+### 4. Write child trie API helper functions
 
-Generate unique ChildInfo IDs:
+First, we'll need to create a function that provides the pallet's dispatchables with the account ID for the pot of funds. Inside `impl<T: Config> Pallet<T>`, write:
+
+```rust
+const PALLET_ID: ModuleId = ModuleId(*b"ex/cfund");
+/**snip**/
+pub fn fund_account_id(index: FundIndex) -> T::AccountId {
+    PALLET_ID.into_sub_account(index)
+	}
+```
+
+Then, we'll need to generate unique [ChildInfo][childinfo-rustdocs] IDs:
 
 ```rust
 pub fn id_from_index(index: FundIndex) -> child::ChildInfo {
@@ -106,37 +133,77 @@ pub fn id_from_index(index: FundIndex) -> child::ChildInfo {
     child::ChildInfo::new_default(T::Hashing::hash(&buf[..]).as_ref())
 }
 ```
+Finally, we can write the following helper functions that make use of the [Child API][child-api-rustdocs]:
 
+`pub fn contribution_put`:
+- record a contribution in the associated child trie using [`put`][child-api-put-rustdocs]
+
+`pub fn contribution_get`:
+- lookup a contribution in the associated child trie using [`get`][child-api-get-rustdocs]
+
+`pub fn contribution_kil`: 
+- remove a contribution from an associated child trie using [`kill`][child-api-kill-rustdocs]
+
+`pub fn crowdfund_kill`:
+- remove the entire record of contributions in the associated child trie in a single storage write using [`kill_storage`][child-api-killstorage-rustdocs]
 ### 5. Write dispatchable functions
 
-- fn create(...) - Create a new fund.
-    - use `T::Currency::withdraw(...)` to create imbalance variable.
-    - update the `Funds` storage item
-    - deposit a `Created` event 
+The follow steps outline how to write the dispatchables for this pallet. After various checks within the dispatchables' logic, each function alters the `Funds<T>` storage map using its [associated methods][storage-map-rustdocs]. Our pallet's `create` function also makes use of the `FundInfo` struct previously created. Learn how to use a storage struct in [this how-to guide][storage-value-struct-htg]. 
+
+
+#### Create a new fund
+`fn create`:
+- create an imbalance variable using [`T::Currency::withdraw`][imb-var-rustdocs]
+- update the `Funds` storage item using the `FundInfo` struct from [step 2](#2-create-a-custom-metadata-struct)
+- deposit a `Created` event
     
-- fn contribute(...) - Contribute funds to an existing fund.
-    - perform preliminary safety checks using `ensure!(...)`
-    - add the contribution to the fund
-    - deposit a `Contributed` event
+#### Contribute funds to an existing fund
+`fn contribute`:
+- perform preliminary safety checks using `ensure!`
+- add the contribution to the fund using `T::Currency::transfer`
+- record the contribution in the child trie using the helper function `contribution_put`
+- deposit a `Contributed` event
 
-- fn withdraw - (...) - Withdraw full balance of a contributor to a fund.
-    - perform preliminary safety checks using `ensure!(...)`
-    - use the `T::Currency::resolve_into_existing(...)` to return funds
-    - calculate new balances and update storage `T::Currency::resolve_into_existing(...)`
-    - deposit `Withdrew` event
+#### Withdraw full balance of a contributor to a fund
+`fn withdraw`:
+- perform preliminary safety checks using `ensure!`
+- return funds by using [`T::Currency::resolve_into_existing`][resolve-into-existing-rustdocs]
+- calculate new balances and update storage using child trie helper functions `funds`, `contribution_get` and `contribution_kill`
+- deposit `Withdrew` event
 
-- fn dissolve(...) - Dissolve an entire crowdfund after its retirement period has expired.
-    - perform preliminary safety checks using `ensure!(...)`
-    - use `T::Currency::resolve_creating(...)` for dissolver to collect funds
-    - deposit `Dissolved` event
+#### Dissolve an entire crowdfund after its retirement period has expired.
+`fn dissolve`: 
+- perform preliminary safety checks using `ensure!`
+- allow dissolver to collect funds by using [`T::Currency::resolve_creating`][resolve-creating-rustdocs] for dissolver to collect funds
+- use the child trie helper function `crowdfund_kill` to remove contributor info from storage
+- deposit `Dissolved` event
 
-
-- fn dispense(...) - Dispense a payment to the beneficiary of a successful crowdfund.
-    - use `T::Currency::resolve_creating(...)` for beneficiary and caller (separately) to collect funds
-    - remove the fund from storage using `<Funds<T>>::remove(index);` and `Self::crowdfund_kill(index);` to remove all contributors from storage in a single write
+#### Dispense a payment to the beneficiary of a successful crowdfund
+`fn dispense`:
+- use [`T::Currency::resolve_creating`][resolve-creating-rustdocs] for beneficiary and caller (separately) to collect funds
+- give initial deposit to account who calls this function as an incentive to clean up storage
+- remove the fund from storage using `<Funds<T>>::remove(index);` and `Self::crowdfund_kill(index);` to remove all contributors from storage in a single write
 
 ## Examples
 - `pallet_simple_crowdfund` 
 ## Resources
+#### How-to guides
 
-- Currency [Imbalance trait](https://substrate.dev/rustdocs/v3.0.0/frame_support/traits/trait.Imbalance.html) 
+- [Create a struct in storage][storage-value-struct-htg]
+#### Rust docs
+- [Currency Imbalance trait](https://substrate.dev/rustdocs/v3.0.0/frame_support/traits/trait.Imbalance.html) 
+- [Child trie API][child-api-rustdocs]
+- [`extend_from_slice`](https://crates.parity.io/frame_support/dispatch/struct.Vec.html#method.extend_from_slice)
+- [`using_encode`](https://crates.parity.io/frame_support/pallet_prelude/trait.Encode.html#method.using_encoded)
+
+[storage-value-struct-htg]: /storage-value-struct
+[storage-map-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/pallet_prelude/struct.StorageMap.html
+[imb-var-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/traits/trait.Currency.html#tymethod.withdraw
+[resolve-into-existing-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/traits/trait.Currency.html#method.resolve_into_existing
+[resolve-creating-rustdocs]: https://crates.parity.io/frame_support/traits/tokens/currency/trait.Currency.html#method.resolve_creating
+[child-info-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/storage/child/enum.ChildInfo.html
+[child-api-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/storage/child/index.html#functions
+[child-api-put-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/storage/child/fn.put.html
+[child-api-get-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/storage/child/fn.get_or_default.html
+[child-api-kill-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/storage/child/fn.kill.html
+[child-api-killstorage-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/storage/child/fn.kill_storage.html

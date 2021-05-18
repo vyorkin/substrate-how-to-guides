@@ -8,7 +8,6 @@
 
 use sp_std::prelude::*;
 
-
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::{pallet_prelude::*, ensure, storage::child,
