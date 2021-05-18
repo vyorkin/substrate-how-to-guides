@@ -7,23 +7,17 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use sp_std::prelude::*;
-pub use pallet::*;
+
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::pallet_prelude::*;
-	use frame_system::pallet_prelude::*;
-	use super::*;
-	use frame_support::{
-		ensure,
-		storage::child,
+	use frame_support::{pallet_prelude::*, ensure, storage::child,
 		traits::{Currency, ExistenceRequirement, Get, ReservableCurrency, WithdrawReasons},
+		sp_runtime::{traits::{AccountIdConversion, Saturating, Zero, Hash},
+		ModuleId}
 	};
-	use frame_system::ensure_signed;
-	use frame_support::sp_runtime::{
-		traits::{AccountIdConversion, Saturating, Zero},
-		ModuleId,
-	};
+	use frame_system::{pallet_prelude::*, ensure_signed};
+	use super::*;
 
 	const PALLET_ID: ModuleId = ModuleId(*b"ex/cfund");
 
@@ -84,8 +78,8 @@ pub mod pallet {
 	<	_, 
 		Blake2_128Concat, 
 		FundIndex, 
-		Option<FundInfoOf<T>>,
-		ValueQuery
+		FundInfoOf<T>,
+		OptionQuery,
 	>;
 
 	#[pallet::storage]
@@ -127,7 +121,7 @@ pub mod pallet {
 	}
 
 	#[pallet::hooks]
-    impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
 
 	#[pallet::call]
     impl<T: Config> Pallet<T> {
@@ -149,9 +143,10 @@ pub mod pallet {
 				WithdrawReasons::TRANSFER,
 				ExistenceRequirement::AllowDeath,
 			)?;
-				let index = FundCount::get();
+				
+			let index = <FundCount<T>>::get();
 			// not protected against overflow, see safemath section
-			FundCount::put(index + 1);
+			<FundCount<T>>::put(index + 1);
 			// No fees are paid here if we need to create this account; that's why we don't just
 			// use the stock `transfer`.
 			T::Currency::resolve_creating(&Self::fund_account_id(index), imb);
@@ -318,56 +313,56 @@ pub mod pallet {
 				Ok(().into())
 			}
 		}
+			
+		impl<T: Config> Pallet<T> {
+			/// The account ID of the fund pot.
+			///
+			/// This actually does computation. If you need to keep using it, then make sure you cache the
+			/// value and only call this once.
+			pub fn fund_account_id(index: FundIndex) -> T::AccountId {
+				PALLET_ID.into_sub_account(index)
+			}
+
+			/// Find the ID associated with the fund
+			///
+			/// Each fund stores information about its contributors and their contributions in a child trie
+			/// This helper function calculates the id of the associated child trie.
+			pub fn id_from_index(index: FundIndex) -> child::ChildInfo {
+				let mut buf = Vec::new();
+				buf.extend_from_slice(b"crowdfnd");
+				buf.extend_from_slice(&index.to_le_bytes()[..]);
+
+				child::ChildInfo::new_default(T::Hashing::hash(&buf[..]).as_ref())
+			}
+
+			/// Record a contribution in the associated child trie.
+			pub fn contribution_put(index: FundIndex, who: &T::AccountId, balance: &BalanceOf<T>) {
+				let id = Self::id_from_index(index);
+				who.using_encoded(|b| child::put(&id, b, &balance));
+			}
+
+			/// Lookup a contribution in the associated child trie.
+			pub fn contribution_get(index: FundIndex, who: &T::AccountId) -> BalanceOf<T> {
+				let id = Self::id_from_index(index);
+				who.using_encoded(|b| child::get_or_default::<BalanceOf<T>>(&id, b))
+			}
+
+			/// Remove a contribution from an associated child trie.
+			pub fn contribution_kill(index: FundIndex, who: &T::AccountId) {
+				let id = Self::id_from_index(index);
+				who.using_encoded(|b| child::kill(&id, b));
+			}
+
+			/// Remove the entire record of contributions in the associated child trie in a single
+			/// storage write.
+			pub fn crowdfund_kill(index: FundIndex) {
+				let id = Self::id_from_index(index);
+				// The None here means we aren't setting a limit to how many keys to delete.
+				// Limiting can be useful, but is beyond the scope of this recipe. For more info, see
+				// https://crates.parity.io/frame_support/storage/child/fn.kill_storage.html
+				child::kill_storage(&id, None);
+			}
 	
-
-
-	impl<T: Config> Module<T> {
-		/// The account ID of the fund pot.
-		///
-		/// This actually does computation. If you need to keep using it, then make sure you cache the
-		/// value and only call this once.
-		pub fn fund_account_id(index: FundIndex) -> T::AccountId {
-			PALLET_ID.into_sub_account(index)
-		}
-
-		/// Find the ID associated with the fund
-		///
-		/// Each fund stores information about its contributors and their contributions in a child trie
-		/// This helper function calculates the id of the associated child trie.
-		pub fn id_from_index(index: FundIndex) -> child::ChildInfo {
-			let mut buf = Vec::new();
-			buf.extend_from_slice(b"crowdfnd");
-			buf.extend_from_slice(&index.to_le_bytes()[..]);
-
-			child::ChildInfo::new_default(T::Hashing::hash(&buf[..]).as_ref())
-		}
-
-		/// Record a contribution in the associated child trie.
-		pub fn contribution_put(index: FundIndex, who: &T::AccountId, balance: &BalanceOf<T>) {
-			let id = Self::id_from_index(index);
-			who.using_encoded(|b| child::put(&id, b, &balance));
-		}
-
-		/// Lookup a contribution in the associated child trie.
-		pub fn contribution_get(index: FundIndex, who: &T::AccountId) -> BalanceOf<T> {
-			let id = Self::id_from_index(index);
-			who.using_encoded(|b| child::get_or_default::<BalanceOf<T>>(&id, b))
-		}
-
-		/// Remove a contribution from an associated child trie.
-		pub fn contribution_kill(index: FundIndex, who: &T::AccountId) {
-			let id = Self::id_from_index(index);
-			who.using_encoded(|b| child::kill(&id, b));
-		}
-
-		/// Remove the entire record of contributions in the associated child trie in a single
-		/// storage write.
-		pub fn crowdfund_kill(index: FundIndex) {
-			let id = Self::id_from_index(index);
-			// The None here means we aren't setting a limit to how many keys to delete.
-			// Limiting can be useful, but is beyond the scope of this recipe. For more info, see
-			// https://crates.parity.io/frame_support/storage/child/fn.kill_storage.html
-			child::kill_storage(&id, None);
-		}
 	}
+			
 }
