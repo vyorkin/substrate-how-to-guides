@@ -185,7 +185,7 @@ The follow steps outline how to write the dispatchables for this pallet. After v
 - remove the fund from storage using `<Funds<T>>::remove(index);` and `Self::crowdfund_kill(index);` to remove all contributors from storage in a single write
 
 ## Examples
-- `pallet_simple_crowdfund` 
+- [`pallet_simple_crowdfund`](https://github.com/substrate-developer-hub/substrate-how-to-guides/blob/main/example-code/template-node/pallets/simple-crowdfund/src/lib.rs#L1)
 ## Resources
 #### How-to guides
 
