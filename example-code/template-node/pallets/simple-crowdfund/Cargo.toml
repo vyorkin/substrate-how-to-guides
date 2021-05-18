@@ -1,6 +1,6 @@
 [package]
 authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
-description = 'FRAME pallet template for defining custom runtime logic.'
+description = 'A pallet that can mange multiple accounts using child storage, with which users can pool funds toward a common goal.'
 edition = '2018'
 homepage = 'https://substrate.dev'
 license = 'Unlicense'
