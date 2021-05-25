@@ -32,7 +32,7 @@ use frame_support::{
 ```
 
 ### 2.Declare the `LockIdentifier` constant
-In order to use `LockableCurrency`, we need to declare a [`LockIdentifier`][lockidentifier-rustdocs]: 
+In order to use `LockableCurrency`, we need to declare a [`LockIdentifier`][lockidentifier-rustdocs] (must be 8 characters long):
 
 ```rust
 const EXAMPLE_ID: LockIdentifier = *b"example ";
@@ -64,57 +64,63 @@ unlocking a curency for a period of time. These are:
 Call the `set_lock()` method from `Currency`:
 
 ```rust
-/// Locks the specified amount of tokens from the caller
-		#[weight = 10_000]
-		fn lock_capital(origin, amount: BalanceOf<T>) -> DispatchResult {
-			let user = ensure_signed(origin)?;
+	#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+	pub(super) fn lock_capital(
+		origin: OriginFor<T>,
+		#[pallet::compact] amount: BalanceOf<T>
+	) -> DispatchResultWithPostInfo {
+		
+		let user = ensure_signed(origin)?;
+	
+		T::Currency::set_lock(
+			EXAMPLE_ID,
+			&user,
+			amount,
+			WithdrawReasons::all(),
+		);
 
-			T::Currency::set_lock(
-				EXAMPLE_ID,
-				&user,
-				amount,
-				WithdrawReasons::all(),
-			);
-
-			Self::deposit_event(RawEvent::Locked(user, amount));
-			Ok(())
-		}
+		Self::deposit_event(Event::Locked(user, amount));
+		Ok(().into())
+	}
 ```
 #### `fn extend_lock`
 Call the `extend_lock()` method from `Currency`:
 
 ```rust
-#[weight = 10_000]
-		fn extend_lock(origin, amount: BalanceOf<T>) -> DispatchResult {
-			let user = ensure_signed(origin)?;
+	#[pallet::weight(1_000)]
+	pub(super) fn extend_lock(
+		origin: OriginFor<T>,
+		#[pallet::compact] amount: BalanceOf<T>,
+	) -> DispatchResultWithPostInfo {
+		let user = ensure_signed(origin)?;
+		
+		T::Currency::extend_lock(
+			EXAMPLE_ID,
+			&user,
+			amount,
+			WithdrawReasons::all(),
+		);
 
-			T::Currency::extend_lock(
-				EXAMPLE_ID,
-				&user,
-				amount,
-				WithdrawReasons::all(),
-			);
-
-			Self::deposit_event(RawEvent::ExtendedLock(user, amount));
-			Ok(())
-		}
+		Self::deposit_event(Event::ExtendedLock(user, amount));
+		Ok(().into())
+	}
 ```
 
 #### `fn unlock_all` 
 Call the `remove_lock()` method from `Currency`:
 
 ```rust
-/// Releases all locked tokens
-		#[weight = 10_000]
-		fn unlock_all(origin) -> DispatchResult {
-			let user = ensure_signed(origin)?;
+	#[pallet::weight(1_000)]
+	pub(super) fn unlock_all(
+		origin: OriginFor<T>,
+	) -> DispatchResultWithPostInfo {
+		let user = ensure_signed(origin)?;
 
-			T::Currency::remove_lock(EXAMPLE_ID, &user);
+		T::Currency::remove_lock(EXAMPLE_ID, &user);
 
-			Self::deposit_event(RawEvent::Unlocked(user));
-			Ok(())
-		}
-
+		Self::deposit_event(Event::Unlocked(user));
+		Ok(().into())
+	}
 ```
 
 ## Examples
