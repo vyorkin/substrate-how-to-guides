@@ -57,7 +57,7 @@ module.exports = {
           sidebarPath: require.resolve("./sidebars.js"),
           // Please change this to your repo.
           editUrl:
-            "https://github.com/substrate-developer-hub/substrate-how-to-guides/edit/main/how-to-substrate/",
+            "https://github.com/substrate-developer-hub/substrate-how-to-guides/edit/main/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
