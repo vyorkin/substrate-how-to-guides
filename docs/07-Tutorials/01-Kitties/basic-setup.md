@@ -1,10 +1,11 @@
 ---
 sidebar_position: 2
 keywords: pallet design, intermediate, runtime
+theme: codeview
+code: code/kitties-tutorial/01-basic-setup.rs
 ---
 
 # Part I: Basic set-up 
-_Part I of Substrate Kitties tutorial._
 
 :::note
 This tutorial assumes that you have successfully installed all of the prerequisites for building with Substrate on your machine.
@@ -87,7 +88,7 @@ Every FRAME pallet has:
 We'll be updating the dependencies as needed by the code we'll be writing.
 ::: 
 
-In the most bare-bones version, a pallet looks like this:
+In its most bare-bones version, a pallet looks like this:
 
 ```rust
 pub use pallet::*;
@@ -109,7 +110,7 @@ pub mod pallet {
 }
 ```
 
-:::tip 
+:::info 
 Refer to [this guide](./01-basics/basic-pallet-integration) to learn the basic pattern for integrating a new pallet to your runtime and 
 read more about pallets in this [knowledgebase article][pallets-kb].  
 ::: 
@@ -135,7 +136,7 @@ Assuming everything compiled without error, we can launch our chain and check th
 ```
 
 :::tip 
-Get into the habit of using `./target/release/substratekitties purge-chain --dev` when you're starting a new chain to clean up your node before starting it up.
+Get into the habit of using `./target/release/substratekitties purge-chain --dev` when you're starting a new chain to clean up your node before starting it up again.
 :::
 
 Congratulations if you've made it here! We don't need to keep our node running, that was just a way to check our pallet and runtime are 
@@ -146,7 +147,7 @@ properly configured. In the next steps we will start writing the storage items o
 Let's add the most simple logic we can to our runtime: a function which stores a variable.
 
 To do this we'll use [`StorageValue`][storagevalue-rustdocs] from Substrate's [storage API][storage-api-rustdocs]. This trait depends 
-on the storage macro. All that means for our purposes is for any storage item we want to declare, we must include `#[pallet::storage]` beforehand. Using `StorageValue` as an example, this would look like this:
+on the storage macro. All that means for our purposes is that for any storage item we want to declare, we must include `#[pallet::storage]` beforehand. Using `StorageValue` as an example, this would look like this:
 
 ```rust
 #[pallet::storage]
@@ -171,14 +172,14 @@ storage. For example (using `get()` and `put()`):
 	<SomeStorageValue<T>>::put(0u64);
 ``` 
 
-:::tip You're turn!
+:::tip Your turn!
  Our Kitties dApp will need to keep track of a number of things. The first will be the number of Kitties. 
  Write a storage item to keep track of all Kitties, call it `AllKittiesCount`.
 :::
 
 ### 3. Build and check your pallet
 
-From the previous step, your pallet should contain a storage item called `AllKittiesCount` that keeps track of a
+From the previous step, your pallet should contain a storage item called `AllKittiesCount` which keeps track of a
 single `u64` value. As part of the basic setup, we're doing great! As mentioned in the [overview of this tutorial](overview),
 we'll be needing a total of 9 storage items which we'll discover as we write out our logic in the next section.
 
@@ -191,18 +192,23 @@ cargo build -p pallet_kitties
 It should compile without and error. If not, go back and check that all the macros are in place and that you've included the
 FRAME dependencies.
 
-Congratulations on finishing the first part of this tutorial! 
-
+:::note
+Congratulations on finishing the first part of this tutorial! At this stage, we've learnt:
+- the basic pattern for customizing the Substrate node template and including a custom pallet
+- the different patterns for building our chain and checking that a single pallet compiles
+- how to declare and use a `u64` storage item
+:::
 ## Next steps
 
-- Using the Randomness trait
+- Using the Randomness trait to create unique Kitties
+- Writing a struct to store details about our Kitties
 - Creating and using pallet Events
 - Writing functions to own and issue a Kitty NFT
 - Viewing owned Kitties
 
 [installation]: https://substrate.dev/docs/en/knowledgebase/getting-started/
 [substrate-node-template]: https://github.com/substrate-developer-hub/substrate-node-template
-[pallet-kb]: https://substrate.dev/docs/en/knowledgebase/runtime/pallets
+[pallets-kb]: https://substrate.dev/docs/en/knowledgebase/runtime/pallets
 [macros-kb]: https://substrate.dev/docs/en/knowledgebase/runtime/macros#frame-v2-macros-and-attributes
 [storagevalue-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/storage/trait.StorageValue.html
 [storage-api-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/storage/index.html

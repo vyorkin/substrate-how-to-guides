@@ -47,27 +47,27 @@ builds without any error.
 
 ## Steps
 
-### 1. Basic set-up 
+### [1. Basic set-up](basic-setup) 
 
 - Create a pallet and integrate it to your runtime
 - Include your pallet's storage items
 - Build and check your pallet
 
-### 2. Create, view and own Kitties
+### [2. Create, view and own Kitties](create-kitties)
 
 - How to create and use the Randomness trait
 - How to create and use pallet Events
 - How to own and issue a Kitty NFT
 - How to view owned Kitties
 
-### 3. Interacting with your Kitties
+### 3. [Interacting with your Kitties](interacting-functions)
 
 - How to set a price for each Kitty
 - How to transfer a Kitty 
 - How to buy a Kitty
 - How to breed new Kitties
 
-### 4. Viewing Kitties in a UI
+### 4. [Viewing Kitties in a UI](kitties-frontend)
 
 - How to build React components for our functions
 - How to connect our node to a front-end (custom types)
