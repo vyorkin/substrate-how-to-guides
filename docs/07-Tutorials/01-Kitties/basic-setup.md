@@ -1,7 +1,6 @@
 ---
 sidebar_position: 2
 keywords: pallet design, intermediate, runtime
-theme: codeview
 code: code/kitties-tutorial/01-basic-setup.rs
 ---
 
