@@ -491,7 +491,7 @@ pub mod pallet {
                 .checked_add(1)
                 .ok_or("Transfer causes overflow of 'to' kitty balance")?;
 
-			// Increment the amount of owned Kitties by 1.
+			// Decrease the amount of owned Kitties by 1.
             let new_owned_kitty_count_from = owned_kitty_count_from
                 .checked_sub(1)
                 .ok_or("Transfer causes underflow of 'from' kitty balance")?;

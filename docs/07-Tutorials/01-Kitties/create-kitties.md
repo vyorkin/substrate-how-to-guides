@@ -1,7 +1,6 @@
 ---
 sidebar_position: 3
 keywords: pallet design, intermediate, runtime
-theme: codeview
 code: code/kitties-tutorial/02-create-kitties.rs
 ---
 
@@ -24,26 +23,24 @@ needed to manage the creation, ownership and visualization of our Kitties.
 
 ### 1. Create the Kitty struct
 
-#### Understanding what information to include
+#### A. Understanding what information to include
 
 Structs are a useful tool to help carry information that corresponds to the same object. 
 For our purposes, instead of using separate storage items for each of our Kitty traits, 
 we can store this information in a single struct. This comes in handy when trying to optimize
 for storage reads and writes. Let's first go over what information a single Kitty carries:
 
-- `id`: a unique hash to identify each Kitty
+- `id`: a unique hash to identify each Kitty.
 - `dna`: the hash used to identify the DNA of a Kitty, which corresponds to its unique features.
 DNA is also used to breed new Kitties and to keep track of different Kitty generations.
 - `price`: this is a balance that corresponds to the amount needed to buy a Kitty and 
-determined by its owner
+determined by its owner.
 - `gender`: an enum that can be either `Male` or `Female`.
 
-:::note 
-You could ofcourse add whichever additional pieces of information you want to your 
-Kitty struct. In this tutorial, we're going to keep things simple.
+:::note You could ofcourse add whichever additional pieces of information you want to your Kitty struct. In this tutorial, we're going to keep things simple.
 :::
 
-#### Writing out the struct
+#### B. Writing out the struct
 Now that we know what to include in our Kitty struct, let's recap the basics of declaring a struct.
 Any struct has the following format:
 
@@ -52,18 +49,20 @@ Any struct has the following format:
 pub struct SomeStruct<SomeType1, SomeType2> {
     value_1: SomeType1,
     value_2: SomeType2,
+}
 ```
 We use the derive macro to include various helper types for using our struct. 
 
 :::tip Your turn!
 Write out the Kitty struct and include all the essential values. 
-HINT: it will take `Hash` and `Balance` as its types.
+**HINT**: it will take `Hash` and `Balance` as its types.
+Have a look at [this how-to guide](../../pallet-design/storage-value-struct) 
 :::
-#### Adding the `Hash` dependency
+#### C. Adding the `Hash` dependency
 We already know the types of the different items in our struct. There's `Hash`, `Balance` and `Gender`. 
 
 For `Gender`, we'll need to build out our own custom enum and functions. Similarly, `Balance` 
-will be something we define in our configuration trait. However, we can import 
+will be something we define in our configuration trait. However, we can start by importing 
 the `Hash` types from the `frame_support` library. Write this at the top of your pallet where 
 the dependencies are declared:
 
@@ -71,7 +70,7 @@ the dependencies are declared:
 	use frame_support::sp_runtime::traits::{Hash};
 ```
 
-#### Adding the custom `Gender` dependency
+#### D. Adding the custom `Gender` dependency
 
 `Gender` will have three parts to it:
 1. An enum declaration
@@ -80,7 +79,7 @@ the dependencies are declared:
 Setting up our `Gender` enum this way allows us to derive a Kitty's gender by the randomness
 created by each Kitty's DNA.
 
-#### Enums
+#### D. Enums
 
 Writing enums requires us to use the derive macro which must precede the enum declaration. 
 
