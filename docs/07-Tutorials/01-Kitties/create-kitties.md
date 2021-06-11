@@ -106,7 +106,7 @@ This would look something like this:
 It's like saying: we're giving our enum a special trait that allows us to initialize it to a specific value.
 Great, we now know how to create a custom struct and specify its default value. But what about providing
 a way for a Kitty struct to be assigned a gender value? For that we need to learn one more thing. 
-#### Configuring functions for our Kitty struct
+#### F. Configuring functions for our Kitty struct
 
 Configuring a struct is useful in order to pre-define a value in our struct. For example, if we want to 
 set a value according to what another function returns. In our case we have a similar situation where 
@@ -140,6 +140,61 @@ of `Gender` for our `Kitties` struct.
 :::
 ### 2. Create and use the Randomness trait
 
+If we want to be able to tell these kitties apart, we need to start giving them unique properties! 
+For our app, we need to generate a unique id for each Kitty and some random dna.
+
+We'll be using the [Randomness trait][randomness-rustdocs] from `frame_support` to generate a random seed which we'll use 
+to breed and create new unique Kitties. Alongside this trait, we'll also need a Nonce which we'll create as a separate function
+and a Hashing function which we'll borrow from the [`Hash` trait][hash-rustdocs] from `sp_runtime`.
+
+Here's what our random hashing function looks like:
+
+```rust
+        fn random_hash(sender: &T::AccountId) -> T::Hash {
+            let nonce = <Nonce<T>>::get();
+            let seed = T::Randomness::random_seed();
+
+            T::Hashing::hash_of(&(seed, &sender, nonce))
+        }
+```
+
+Let's take a second to understand why our random hashing function needs a Nonce, after which we'll also go through what 
+the Nonce function looks like.
+
+Since the random seed does not change for multiple transactions in the same block, and since it may not even generate a 
+random seed for the first 80 blocks, we need to create a nonce which our module can manage. Furthermore, 
+we can also use a user specific property like the `AccountId` to introduce a bit more entropy.
+
+The idea is to hash this combined data in order to get enough randomness for our needs.
+
+To easily track all of our kitties, it would be helpful to standardize our logic to use a unique id as the global key 
+for our storage items. This means that a single unique key will point to our Kitty object, and all other ownership links 
+or maps will point to that key.
+
+The id on the Kitty object will serve that purpose, but we need to make sure that the id for a new kitty is always unique. 
+We can do this with a new storage item Kitties which will be a mapping from id (Hash) to the Kitty object.
+
+With this object, we can easily check for collisions by simply checking whether this storage item already contains a mapping 
+using a particular id. For example:
+
+```rust
+ensure!(!<Kitties<T>>::exists(new_id), "This new id already exists");
+```
+
+:::tip Your turn!
+Let's update our module to support generating random data for our kitties, and use that random data to create unique ids which
+ will be the basis for our storage and logic.
+
+We will introduce a new Kitties storage items which will map an id to a Kitty object. We will also want to create a KittyOwner
+ storage item which will map an id to the AccountId who owns the kitty.
+
+Finally we can update our OwnedKitty object to point to this unique id rather than have a duplicate copy of the Kitty 
+object in our storage.
+
+Now that we have set up all these new storage items, we will need to also update our create_kitty() function to correctly 
+update these storage items when a kitty is made.
+:::
+
 ### 3. Create and use pallet Events
 
 ### 4. How to own and issue a Kitty NFT
@@ -149,3 +204,5 @@ of `Gender` for our `Kitties` struct.
 ## Next steps
 
 [default-rustdocs]: https://doc.rust-lang.org/std/default/trait.Default.html
+[randomness-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/traits/trait.Randomness.html
+[hash-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/sp_runtime/traits/trait.Hash.html 
