@@ -410,7 +410,7 @@ pub mod pallet {
 
 	impl<T: Config> Pallet<T> {
         
-		/// Safely increment the nonce, with error on overflow
+		/// Safely increment the nonce, with error on overflow.
         fn increment_nonce() -> DispatchResult {
             <Nonce<T>>::try_mutate(|nonce| {
                 let next = nonce.checked_add(1).ok_or(Error::<T>::NonceOverflow)?;
@@ -420,7 +420,7 @@ pub mod pallet {
             })
         }
 
-       	/// Generate a random hash, using the nonce as part of the hash
+       	/// Generate a random hash, using the nonce as part of the hash.
         fn random_hash(sender: &T::AccountId) -> T::Hash {
             let nonce = <Nonce<T>>::get();
             let seed = T::Randomness::random_seed();

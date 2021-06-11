@@ -60,14 +60,14 @@ builds without any error.
 - How to own and issue a Kitty NFT
 - How to view owned Kitties
 
-### 3. [Interacting with your Kitties](interacting-functions)
+### [3. Interacting with your Kitties](interacting-functions)
 
 - How to set a price for each Kitty
 - How to transfer a Kitty 
 - How to buy a Kitty
 - How to breed new Kitties
 
-### 4. [Viewing Kitties in a UI](kitties-frontend)
+### [4. Viewing Kitties in a UI](kitties-frontend)
 
 - How to build React components for our functions
 - How to connect our node to a front-end (custom types)
