@@ -6,6 +6,8 @@ pub mod pallet {
     use frame_support::pallet_prelude::*;
     use frame_system::pallet_prelude::*;
 
+    // Part II, Step 1A-B: Write a Struct to hold Kitty information.
+    // Part II, Step 1D-E: Set Gender type in Kitty struct.
     #[pallet::pallet]
     #[pallet::generate_store(trait Store)]
     pub struct Pallet<T>(_);
@@ -29,4 +31,6 @@ pub mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {}
+
+    // Part II, Step 1F: write a function to configure the Kitty struct.
 }

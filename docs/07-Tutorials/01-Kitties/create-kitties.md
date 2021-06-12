@@ -5,8 +5,8 @@ code: code/kitties-tutorial/02-create-kitties.rs
 ---
 
 # Part II: Create, view and own Kitties
-In this part of the tutorial, we'll build the parts of our pallet 
-needed to manage the creation, ownership and visualization of our Kitties.
+In this part of the tutorial, we'll build out the components of our pallet 
+needed to manage the creation and ownership of our Kitties.
 
 ## Learning outcomes
 
@@ -14,7 +14,6 @@ needed to manage the creation, ownership and visualization of our Kitties.
 - Using the Randomness trait to create unique Kitties
 - Creating and using pallet Events
 - Writing functions to own and issue a Kitty 
-- Viewing owned Kitties
 ## Overview
 
 
@@ -79,7 +78,7 @@ the dependencies are declared:
 Setting up our `Gender` enum this way allows us to derive a Kitty's gender by the randomness
 created by each Kitty's DNA.
 
-#### D. Enums
+#### E. Enums
 
 Writing enums requires us to use the derive macro which must precede the enum declaration. 
 
@@ -140,12 +139,12 @@ of `Gender` for our `Kitties` struct.
 :::
 ### 2. Create and use the Randomness trait
 
-If we want to be able to tell these kitties apart, we need to start giving them unique properties! 
+If we want to be able to tell these Kitties apart, we need to start giving them unique properties! 
 For our app, we need to generate a unique id for each Kitty and some random dna.
 
 We'll be using the [Randomness trait][randomness-rustdocs] from `frame_support` to generate a random seed which we'll use 
 to breed and create new unique Kitties. Alongside this trait, we'll also need a Nonce which we'll create as a separate function
-and a Hashing function which we'll borrow from the [`Hash` trait][hash-rustdocs] from `sp_runtime`.
+and a hashing function which we'll borrow from the [`Hash` trait][hash-rustdocs] from `sp_runtime`.
 
 Here's what our random hashing function looks like:
 
@@ -158,20 +157,45 @@ Here's what our random hashing function looks like:
         }
 ```
 
-Let's take a second to understand why our random hashing function needs a Nonce, after which we'll also go through what 
-the Nonce function looks like.
+Let's take a second to understand why our random hashing function needs a nonce. Then, we'll also go through what 
+the nonce function looks like.
 
-Since the random seed does not change for multiple transactions in the same block, and since it may not even generate a 
-random seed for the first 80 blocks, we need to create a nonce which our module can manage. Furthermore, 
-we can also use a user specific property like the `AccountId` to introduce a bit more entropy.
+Our goal is to create as much entropy as we can for `hash_of` to produce enough randomness for our needs. 
+Since `random_seed()` does not change for multiple transactions in the same 
+block, and since it may not even generate a 
+random seed for the first 80 blocks, we need to create a nonce for our pallet to manage and use in our private `random_hash` function.  
+In addition, we'll use `AccountId` to introduce another unique property for our `hash_of` function. 
 
-The idea is to hash this combined data in order to get enough randomness for our needs.
+#### Nonce
+We'll use the nonce provided by [`frame_system::AccountInfo`][nonce-rustdocs] and create a storage item to keep track of it as we change it. 
+So we'll need to do a couple things:
+- create a storage item for the nonce value 
+
+```rust
+	#[pallet::storage]
+    #[pallet::getter(fn get_nonce)]
+    pub(super) type Nonce<T: Config> = StorageValue<_, u64, ValueQuery>;
+```
+- create a function that increments the nonce
+
+```rust
+fn increment_nonce() -> DispatchResult {
+            <Nonce<T>>::try_mutate(|nonce| {
+                let next = nonce.checked_add(1).ok_or(Error::<T>::NonceOverflow)?;
+                *nonce = next;
+
+                Ok(().into())
+            })
+        }
+```
+
+#### Unique Kitty ID
 
 To easily track all of our kitties, it would be helpful to standardize our logic to use a unique id as the global key 
 for our storage items. This means that a single unique key will point to our Kitty object, and all other ownership links 
 or maps will point to that key.
 
-The id on the Kitty object will serve that purpose, but we need to make sure that the id for a new kitty is always unique. 
+The id on the Kitty object will serve that purpose, but we need to make sure that the id for a new Kitty is always unique. 
 We can do this with a new storage item Kitties which will be a mapping from id (Hash) to the Kitty object.
 
 With this object, we can easily check for collisions by simply checking whether this storage item already contains a mapping 
@@ -182,27 +206,37 @@ ensure!(!<Kitties<T>>::exists(new_id), "This new id already exists");
 ```
 
 :::tip Your turn!
-Let's update our module to support generating random data for our kitties, and use that random data to create unique ids which
+Let's update our module to support generating random data for our Kitties, and use that random data to create unique ids which
  will be the basis for our storage and logic.
 
-We will introduce a new Kitties storage items which will map an id to a Kitty object. We will also want to create a KittyOwner
+We will introduce a new Kitties storage items which will map an id to a Kitty object. We will also want to create a `KittyOwner`
  storage item which will map an id to the AccountId who owns the kitty.
 
-Finally we can update our OwnedKitty object to point to this unique id rather than have a duplicate copy of the Kitty 
+Finally we can update our `OwnedKitty` object to point to this unique id rather than have a duplicate copy of the Kitty 
 object in our storage.
-
-Now that we have set up all these new storage items, we will need to also update our create_kitty() function to correctly 
-update these storage items when a kitty is made.
 :::
 
 ### 3. Create and use pallet Events
 
+Now that we have set up all these new storage items, we will need to also update our `create_kitty()` function to correctly 
+update these storage items when a kitty is made.
+
+We'll need 4 different event types:
+- Created
+- PriceSet
+- Transferred
+- Bought
+
+:::tip Your turn!
+Declare your events using #[pallet::event], making sure to include the types that each 
+event returns.
+:::
 ### 4. How to own and issue a Kitty NFT
 
-### 5. How to view owned Kitties
 
 ## Next steps
 
 [default-rustdocs]: https://doc.rust-lang.org/std/default/trait.Default.html
 [randomness-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/traits/trait.Randomness.html
 [hash-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/sp_runtime/traits/trait.Hash.html 
+[nonce-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_system/struct.AccountInfo.html#structfield.nonce
