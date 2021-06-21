@@ -11,12 +11,13 @@ _This is tutorial steps you through building a fully functional dapp for managin
 Learn how to create the dispatchable functions for the Kitty pallet.
 ## Overview
 
-With parts I and II of this tutorial, we've build the core components of our NFT chain. Users can now create and track ownership of their Kitties.
+With parts I, II and III of this tutorial, we've build the core components of our NFT chain. Users can now create and track ownership of
+their Kitties.
 
 In this part of the tutorial, we want to make our runtime more
- like a game by introducing other functions like buying and 
- selling. In order to achieve this, we'll need to enable users 
- to update the price of their Kitty. Then we can add functionality to transfer, buy and breed Kitties.
+like a game by introducing other functions like buying and 
+selling. In order to achieve this, we'll need to enable users 
+to update the price of their Kitty. Then we can add functionality to transfer, buy and breed Kitties.
 
 ## Steps
 
@@ -132,37 +133,66 @@ fn transfer(
 
 In order to use this function, we'll need to import `Currency` and `ExistenceRequirement` from `frame_support`. 
 
-Now that we've went over the things that makes this extrinsic unqique,
-you have everything you need to know to put it together! The following steps will guide you through how this function's logic.
-#### C. "Verify First, Write Last"
+#### C. Putting it all together: "Verify First, Write Last"
 
-A brief overview 
-may help you ensure you've included all the right pieces:
+Now that we've gone over the necessary components for our `buy_kitty` dispatchable function,
+you have everything you need to know to put it together &mdash; you're in the drivers seat! Use the following points as 
+a guide to write `buy_kitty` from scratch.
 
-- Declare your extrinsic with an appropriate weight (100 will do for our purposes)
-- It will take 3 arguments: `origin`, `kitty_id` and `max_price`
-- It will check that kitty_id corresponds to a Kitty in storage
-- It will check that the Kitty has an owner
-- It will check that the account buying the Kitty doesn't already own it
-- It will check that the price of the Kitty is not zero. If it is, it will throw an error
-- It will check that the Kitty price is not greater than `ask_price`
-- It will use the `transfer` function from the `Currency` trait to update
-account balances (as described above)
-- It will use our pallet's `transfer_from` function to change the ownership
+**Basic sanity checks**
+- it will take 3 arguments: `origin`, `kitty_id` and `max_price`
+- check that `kitty_id` corresponds to a Kitty in storage
+- check that the Kitty has an owner
+
+**Check if purchasing Kitty is authorized**
+- check that the account buying the Kitty doesn't already own it
+- check that the price of the Kitty is not zero (if it is, throw an error)
+- check that the Kitty price is not greater than `ask_price`
+
+**Update storage items**
+- use the `transfer` method from the `Currency` trait to update
+account balances 
+- use our pallet's `transfer_from` function to change the ownership
 of the Kitty from `owner` to `sender`
-- It will update the price of the Kitty to the price it was sold at
+- update the price of the Kitty to the price it was sold at
 
+:::tip Your turn!
+Write the `buy_kitty` following what's outlined above.
+:::
 
+### 4. Breed Kitties
 
+The logic behind breeding two Kitties is to multiply each corresponding DNA segment from two Kitties, 
+resulting in a new DNA sequence. Then, that DNA is used when minting a new Kitty. Here's what that
+looks like in code:
 
-### 4. How to breed new Kitties
+```rust
+            let kitty_1 = Self::kitty(kitty_id_1);
+            let kitty_2 = Self::kitty(kitty_id_2);
 
-## Examples
+            let mut final_dna = kitty_1.dna;
+            for (i, (dna_2_element, r)) in kitty_2
+                .dna
+                .as_ref()
+                .iter()
+                .zip(random_hash.as_ref().iter())
+                .enumerate()
+            {
+                if r % 2 == 0 {
+                    final_dna.as_mut()[i] = *dna_2_element;
+                }
+            }
+```
 
-## Resources
-#### How-to guides
+This dispatchable must take the two different Kitties as user inputs and will use the `mint()` function to create the new Kitty.
 
-#### Rust docs
+:::tip Your turn!
+Write `breed_kitty` following the template file for this part of the workshop.
+::: 
+### Next steps
+- Connect your chain to the front-end template
+- Customize the template using PolkadotJS API
+- Interact with your chain 
 
 [transfer-currency-rustdocs]: https://crates.parity.io/frame_support/traits/tokens/currency/trait.Currency.html#tymethod.transfer
 [frame-balances-rustdocs]: https://crates.parity.io/frame_support/traits/tokens/currency/trait.Currency.html

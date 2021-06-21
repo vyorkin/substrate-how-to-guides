@@ -217,6 +217,50 @@ pub mod pallet {
 
             Ok(().into())
         }
+
+		/// Breed a Kitty.
+		///
+		/// Breed two kitties to create a new generation
+		/// of Kitties.
+ 		///
+		/// Weight: `O(1)`
+		#[pallet::weight(100)]
+        pub fn breed_kitty(
+            origin: OriginFor<T>,
+            kitty_id_1: T::Hash,
+            kitty_id_2: T::Hash,
+        ) -> DispatchResultWithPostInfo {
+			
+			// ACTION: Make sure this transaction is signed.
+
+			// ACTION: Include usual checks for each kitty that the
+			// user inputs. 
+
+            let random_hash = Self::random_hash(&sender);
+            let kitty_1 = Self::kitty(kitty_id_1);
+            let kitty_2 = Self::kitty(kitty_id_2);
+
+            let mut final_dna = kitty_1.dna;
+            for (i, (dna_2_element, r)) in kitty_2
+                .dna
+                .as_ref()
+                .iter()
+                .zip(random_hash.as_ref().iter())
+                .enumerate()
+            {
+                if r % 2 == 0 {
+                    final_dna.as_mut()[i] = *dna_2_element;
+                }
+            }
+			
+			// ACTION: Create a new Kitty object with `final_dna`
+
+			// ACTION: Mint the new Kitty.
+
+			// ACTION: Increment the nonce.
+
+            Ok(().into())
+        }
 	}
 
     impl<T: Config> Pallet<T> {

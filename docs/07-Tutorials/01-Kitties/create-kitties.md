@@ -186,7 +186,8 @@ fn increment_nonce() -> DispatchResult {
             })
         }
 ```
-:::note
+:::tip Your turn!
+
 Feel free to use the code snippets above in your pallet. Make sure to 
 include the `Nonce` storage item among the storage items, and the 
 `increment_nonce()` function in the helper function section.
@@ -208,19 +209,88 @@ ensure!(!<Kitties<T>>::exists(new_id), "This new id already exists");
 ```
 
 :::tip Your turn!
-Let's update our module to support generating random data for our Kitties, and use that random data to create unique ids which
- will be the basis for our storage and logic.
-
-We will introduce a new Kitties storage items which will map an id to a Kitty object. We will also want to create a `KittyOwner`
- storage item which will map an id to the AccountId who owns the kitty.
-
-Finally we can update our `OwnedKitty` object to point to this unique id rather than have a duplicate copy of the Kitty 
-object in our storage.
+Let's update our pallet to include the helper functions to handle a Nonce update and a random generator. We will use that random data to create unique IDs which
+ will be the basis for our NFT logic.
 :::
 
+### 3. Include storage items
+
+There's a total of 9 storage items we'll be needing 
+for our Kitty pallet. We already included `Nonce` and we've already created the basis for 
+our Kitty object &mdash; we just need to implement a way to keep track of it now!
+
+Every storage item declaration will follow a similar
+pattern as when we wrote the storage item for `Nonce`. The only difference is which data structure type each storage item requires.
+
+To create a storage instance for the Kitty struct,
+we'll be using `StorageMap` &mdash; a hash-map provided
+to us by FRAME. This differs from the storage instance we created for 
+`Nonce` which, because we want it to keep track of a single `u64` value, we used `StorageValue`. 
+
+Here's the basic pattern for declaring a storage map storage item, showing the storage for Kitty objects as an example:
+
+```rust
+	#[pallet::storage]
+    #[pallet::getter(fn kitty)]
+    pub(super) type Kitties<T: Config> =
+        StorageMap<_, Twox64Concat, T::Hash, Kitty<T::Hash, T::Balance>, ValueQuery>;
+```
+
+Breaking it down, we declare the storage type and assign a `StorageMap` to it whereby:
+
+- the [`Twox64Concat`][2x64-rustdocs] is the hashing algorithm used.
+- a key of type `T::Hash` is used.
+- a value of type `Kitty<T::Hash, T::Balance>` is used.
+
+Our pallet's logic can be understood
+by examining the storage items we'll be using. In other words, the way we define the conditions 
+for reading and writing to our runtime's storage
+help us breakdown the items we'll need to enable NFT capabilities. In our case, we care about state transitions and persistance around two main concepts our runtime needs to be made aware of:
+1. unique assets, like currency or Kitties
+2. helper datastructures, like the nonce, counters or account maps
+
+This already starts to lay the foundations for our Kitty pallet logic. But there's an important layer beneath these two concepts: our runtime needs to have a sense of asset ownership as well as the ability to keep track of changes in ownership and owned quantities.
+
+In our application, ontop of keeping a single storage instance for Kitty objects, we need a number of storage items to keep track of:
+- Kitties in existence
+- Owned Kitties
+
+The overarching pattern here is to keep track
+of *who* and *what*. This boils down to the following storage items (in addition to `Kitties` and `Nonce`):
+
+**Tracking ownership**
+- `<KittyOwner<T>>`: Keeps track of what accounts own what Kitty.
+- `<OwnedKittiesArray<T>>`: Keep track of who a Kitty is owned by.
+- `<OwnedKittiesCount<T>>`: Keeps track of the total amount of Kitties owned.
+- `<OwnedKittiesIndex<T>>`: Keeps track of all owned Kitties by index.
+
+**Tracking existing Kitties**
+- `<AllKittiesArray<T>>`: An index to track of all Kitties.
+- `<AllKittiesCount<T>>`: Stores the total amount of Kitties in existence.
+- `<AllKittiesIndex<T>>`: Keeps track of all the Kitties.
+
+:::tip Your turn!
+Use the storage items declared above to write the remaining storage items for your pallet.
+
+**HINT**: Remember to include a getter function for each storage item &mdash; except those handling indices (they'll only get written;)) .
+:::
+
+Congratulations! If you've made it this far, you now have the foundations for your pallet to
+handle the creation and ownership of unique assets. 
+
+Run this command to check that your pallet compiles correctly: 
+```rust
+cargo build -p pallet-kitties
+```
+
 ## Next steps
+
+- Create a dispatchable function that mints a new Kitty
+- Create a helper function to handle storage updates
+- Create and use an event
 
 [default-rustdocs]: https://doc.rust-lang.org/std/default/trait.Default.html
 [randomness-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/traits/trait.Randomness.html
 [hash-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/sp_runtime/traits/trait.Hash.html 
 [nonce-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_system/struct.AccountInfo.html#structfield.nonce
+[2x64-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/struct.Twox64Concat.html
