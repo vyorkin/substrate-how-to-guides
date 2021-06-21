@@ -12,8 +12,6 @@ needed to manage the creation and ownership of our Kitties.
 
 - Writing a struct to store details about our Kitties
 - Using the Randomness trait to create unique Kitties
-- Creating and using pallet Events
-- Writing functions to own and issue a Kitty 
 ## Overview
 
 
@@ -188,18 +186,22 @@ fn increment_nonce() -> DispatchResult {
             })
         }
 ```
-
+:::note
+Feel free to use the code snippets above in your pallet. Make sure to 
+include the `Nonce` storage item among the storage items, and the 
+`increment_nonce()` function in the helper function section.
+:::
 #### Unique Kitty ID
 
 To easily track all of our kitties, it would be helpful to standardize our logic to use a unique id as the global key 
-for our storage items. This means that a single unique key will point to our Kitty object, and all other ownership links 
-or maps will point to that key.
+for our storage items. This means that a single unique key will point to our Kitty object, and all other links to ownership 
+will point to that key.
 
-The id on the Kitty object will serve that purpose, but we need to make sure that the id for a new Kitty is always unique. 
-We can do this with a new storage item Kitties which will be a mapping from id (Hash) to the Kitty object.
+The ID on the Kitty object will serve that purpose, but we need to make sure that the ID for a new Kitty is always unique. 
+We can do this with a new storage item Kitties which will be a mapping from ID (Hash) to the Kitty object.
 
 With this object, we can easily check for collisions by simply checking whether this storage item already contains a mapping 
-using a particular id. For example:
+using a particular ID. For example:
 
 ```rust
 ensure!(!<Kitties<T>>::exists(new_id), "This new id already exists");
@@ -215,24 +217,6 @@ We will introduce a new Kitties storage items which will map an id to a Kitty ob
 Finally we can update our `OwnedKitty` object to point to this unique id rather than have a duplicate copy of the Kitty 
 object in our storage.
 :::
-
-### 3. Create and use pallet Events
-
-Now that we have set up all these new storage items, we will need to also update our `create_kitty()` function to correctly 
-update these storage items when a kitty is made.
-
-We'll need 4 different event types:
-- Created
-- PriceSet
-- Transferred
-- Bought
-
-:::tip Your turn!
-Declare your events using #[pallet::event], making sure to include the types that each 
-event returns.
-:::
-### 4. How to own and issue a Kitty NFT
-
 
 ## Next steps
 

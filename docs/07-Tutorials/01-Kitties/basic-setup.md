@@ -158,7 +158,7 @@ pub(super) type SomeStorageValue <T: Config> StorageValue <
 >
 ```
 With that declared, we can use the various functions from Substrate's storage API to read and write to 
-storage. For example (using `get()` and `put()`):
+storage. For example, using `get()` and `put()`:
 
 ```rust
     // Get value in storage using the getter function.
@@ -183,12 +183,12 @@ single `u64` value. As part of the basic setup, we're doing great! As mentioned 
 we'll be needing a total of 9 storage items which we'll discover as we write out our logic in the next section.
 
 Before we move on, let's make sure everything compiles. We don't need to rebuild our entire node each time we update our pallet.
-Instead we can use a command to just build our pallet. From inside your pallet directory, run this command in your terminal:
+Instead we can use a command to only build our pallet. From inside your pallet directory, run this command in your terminal:
 
 ```bash
 cargo build -p pallet_kitties
 ```
-It should compile without and error. If not, go back and check that all the macros are in place and that you've included the
+It should compile error-free. If not, go back and check that all the macros are in place and that you've included the
 FRAME dependencies.
 
 :::note

@@ -1,9 +1,9 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 keywords: pallet design, intermediate, runtime
 ---
 
-# Part III: Interacting with your Kitties
+# Part IV: Interacting with your Kitties
 _This is tutorial steps you through building a fully functional dapp for managing Substrate Kitties._
 
 ## Goal
