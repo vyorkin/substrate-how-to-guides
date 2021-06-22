@@ -12,6 +12,13 @@ _Build the custom frontend for the Substrate Kitties workshop._
 - Customize the template using PolkadotJS API
 - Interact with your chain 
 ## Overview
+Now that we have completed runtime development, it is time to build a user interface which can easily access and interact with our 
+custom storage items and functions.
+
+Since this course is primarily about runtime development, what you will learn in this section will not be as comprehensive as before, 
+however it should empower you with the tools needed to extend your own knowledge and abilities.
+
+
 
 ## Steps
 

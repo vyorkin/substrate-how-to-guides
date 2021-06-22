@@ -86,6 +86,7 @@ Let's get right to it. Our `mint()` function will take the following arguments:
 - `to`: of type `T::AccountId`
 - `kitty_id`: of type `T::Hash`
 - `new_kitty`: of type `Kitty<T::Hash, T::Balance>`
+
 And it will return `DispatchResult`.
 
 :::note A quick note on function return types
@@ -156,6 +157,9 @@ specifc event using this pattern:
 ```rust
 Self::deposit_event(Event::Success(var_time, var_day)); 
 ```
+In order to use events inside our pallet, we need to add the event type to our configuration trait. Additionally, just as 
+when adding any type to our pallet's `Config` trait, we need to let our runtime know about it. This pattern is the same as when
+we added the `KittyRandomness` type in the previous part.
 
 :::note Notice that each event deposit is meant to be informative which is why it carries the various types associated with it. 
 
@@ -165,9 +169,12 @@ Learn more about events [here][events-rustdocs].
 :::
 
 :::tip Your turn!
-Write an event for `mint()` with the appropriate return types.
+Set your pallet up for handling events by adding the `Event` type to both your pallet's configuration trait and runtime implementation.
+Then, write an event for `mint()` with the appropriate return types.
 
-**HINT:** Once all storage updates have been made, we want to inform the external world which account 
+**HINT #1:** The ubiquitous Event type is `type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;`
+
+**HINT #2:** Once all storage updates have been made in `mint()`, we want to inform the external world which account 
 has created the Kitty, as well as what that Kitty's ID is.
 :::
 

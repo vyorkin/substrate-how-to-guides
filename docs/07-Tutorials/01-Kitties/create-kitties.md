@@ -142,11 +142,11 @@ of `Gender` for our `Kitties` struct.
 ### 2. Create and use the Randomness trait
 
 If we want to be able to tell these Kitties apart, we need to start giving them unique properties! 
-For our app, we need to generate a unique id for each Kitty and some random dna.
+For our dapp, we need to generate a unique ID for each Kitty and some random DNA.
 
-We'll be using the [Randomness trait][randomness-rustdocs] from `frame_support` to generate a random seed which we'll use 
-to breed and create new unique Kitties. Alongside this trait, we'll also need a Nonce which we'll create as a separate function
-and a hashing function which we'll borrow from the [`Hash` trait][hash-rustdocs] from `sp_runtime`.
+We'll be using the [Randomness trait][randomness-rustdocs] from `frame_support` to generate a random seed which we'll need 
+to breed and create new unique Kitties. Alongside this trait, we'll also need a nonce which we'll create as a separate function
+and a hashing function which we'll get by using the [`Hash` trait][hash-rustdocs] from `sp_runtime`.
 
 Here's what our random hashing function looks like:
 
@@ -159,15 +159,41 @@ Here's what our random hashing function looks like:
         }
 ```
 
-Let's take a second to understand why our random hashing function needs a nonce. Then, we'll also go through what 
-the nonce function looks like.
+In order to implement the `Randomness` trait for our runtime, we must: 
 
-Our goal is to create as much entropy as we can for `hash_of` to produce enough randomness for our needs. 
+**1. Specify it in our pallet's configuration trait**
+
+The `Randomness` trait from `frame_support` requires specifying it with a paramater to replace the `Output` generic.
+Take a look at the documentation and the source code implementation to understand how this works. For our purposes,
+we want the output of functions using this trait to be [`H256`][h256-rustdocs]:
+
+```rust
+		type KittyRandomness: Randomness<H256>; 
+```
+
+**2. Specify it for our runtime.**
+
+Given that we're adding a new type for the configuration of our pallet, we need to tell our runtime about its implementation
+This could come in handy if ever we wanted to change the algorithm that `KittyRandomness` is using, without needing to
+modify where it's used inside our pallet.
+
+To showcase this point, we're going to implement `KittyRandomness` by assigning it to an instance of [FRAME's `RandomnessCollectiveFlip`][randomness-collective-flip-frame]. 
+This requires you to integrate the `RandomnessCollectiveFlip` pallet to your runtime and implement it. Once you do that, inside your
+`runtime/lib.rs` file, include your `KittyRandomness` type for your runtime:
+
+```rust
+impl pallet_kitties::Config for Runtime {
+	type KittyRandomness = RandomCollectiveFlip;
+}
+```
+
+:::note why our random hashing function needs a nonce
+
+Our goal is to create as much entropy as we can for `hash_of` to produce enough randomness when creating Kitty IDs and DNA. 
 Since `random_seed()` does not change for multiple transactions in the same 
 block, and since it may not even generate a 
 random seed for the first 80 blocks, we need to create a nonce for our pallet to manage and use in our private `random_hash` function.  
-In addition, we'll use `AccountId` to introduce another unique property for our `hash_of` function. 
-
+:::
 #### Nonce
 We'll use the nonce provided by [`frame_system::AccountInfo`][nonce-rustdocs] and create a storage item to keep track of it as we change it. 
 So we'll need to do a couple things:
@@ -296,5 +322,7 @@ cargo build -p pallet-kitties
 [default-rustdocs]: https://doc.rust-lang.org/std/default/trait.Default.html
 [randomness-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/traits/trait.Randomness.html
 [hash-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/sp_runtime/traits/trait.Hash.html 
+[h256-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/sp_core/struct.H256.html
+[randomness-collective-flip-frame]: https://substrate.dev/rustdocs/v3.0.0/pallet_randomness_collective_flip/index.html
 [nonce-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_system/struct.AccountInfo.html#structfield.nonce
 [2x64-rustdocs]: https://substrate.dev/rustdocs/v3.0.0/frame_support/struct.Twox64Concat.html
