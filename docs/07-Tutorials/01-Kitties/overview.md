@@ -4,40 +4,40 @@ keywords: pallet design, intermediate, runtime
 ---
 
 # Substrate Kitties Tutorial
-_This tutorial steps you through building a fully functional dapp for managing Substrate Kitties._
+_This is a 5 part series workshop that steps you through building a fully functional NFT dapp for managing Substrate Kitties._
 
 ## Learning outcomes
 
-- Write and integrate a custom FRAME pallet to your runtime
-- Use structs in storage and how to create and update storage items
-- Write extrinsics and helper functions
-- Use PolkadotJS API to connect a Substrate node to custom a front-end
+:arrow_right: Write and integrate a custom FRAME pallet to your runtime
+
+:arrow_right: Use structs in storage and how to create and update storage items
+
+:arrow_right: Write extrinsics and helper functions
+
+:arrow_right: Use PolkadotJS API to connect a Substrate node to custom a front-end
 
 ## Overview
 
-In this first part, you will break things down into components which you will need to build throughout the tutorial.
-In doing so, you will learn the basics of setting up a pallet and including basic storage items to run your Substrate node.
+Welcome to the Substrate Kitties workshop. This is a 5 part series workshop that will teach you everything you need to know to build a fully functional NFT blockchain designed to handle the creation and ownership management of Substrate Kitties. Before jumping into the next section, let's have a look at what we'll be doing. You may find it useful to come back to this section
+as you progress through this workshop, just to keep track of the bigger picture.
 
-Before jumping into the next section, let's have a look at what we'll be doing. This section will be useful to come back to 
-as you complete the tutorial, just to keep track of the bigger picture.
+In this implementation of an NFT chain for Substrate Kitties, to keep things simple, Kitties really can only do the following things:
 
-The Kitties tutorial is a step by step guide to build a decentralized application that enables the creation and ownership management
-of NFT Kitties. In this implementation, to keep things simple, Kitties really can only do the following things:
+:smiley_cat: be created either by some original source or by being bred using existing Kitties.
 
-- be created either by some original source or by being bred using existing Kitties.
-- be sold at a price set by their owner
-- be transferred from one owner to another
+:smirk_cat: be sold at a price set by their owner
 
+:pouting_cat: be transferred from one owner to another
 
-
+---
 Bringing things down to a more granular level, this translates to the following application design:
-- we'll need to spin up a Substrate node and create a custom pallet
-- we'll need a total of 9 storage items in our pallet to keep track of the amount of Kitties; their index; their owners and their 
+1. we'll need to spin up a Substrate node and create a custom pallet
+2. we'll need a total of 9 storage items in our pallet to keep track of the amount of Kitties; their index; their owners and their 
 owner account IDs
-- we'll need a total of 5 dispatchable functions: `create`, `set_price`, `transfer`, `buy_kitty` and `breed_kitty`
-- we'll write 2 helper functions to handle randomness: `increment_nonce` and `random_hash`
-- we'll write 2 helper functions for our dispatchable functions: `mint` and `transfer_from`
-- we'll connect to a React front-end template and create the UI for each dispatchable call
+3. we'll need a total of 5 dispatchable functions: `create`, `set_price`, `transfer`, `buy_kitty` and `breed_kitty`
+4. we'll write 2 helper functions to handle randomness: `increment_nonce` and `random_hash`
+5. we'll write 2 helper functions for our dispatchable functions: `mint` and `transfer_from`
+6. we'll connect to a React front-end template and create the UI for each dispatchable call
 
 :::tip
 Follow each step at your own pace &mdash; the goal is for you to learn and the best way to do that is to try it yourself!
@@ -50,25 +50,29 @@ builds without any error.
 ### [1. Basic set-up](basic-setup) 
 
 - Create a pallet and integrate it to your runtime
-- Include your pallet's storage items
+- Include a simple storage items to keep track of all Kitties
 - Build and check your pallet
 
-### [2. Create, view and own Kitties](create-kitties)
+### [2. Create unique Kitties and their storage items](create-kitties)
 
-- How to create and use the Randomness trait
-- How to create and use pallet Events
-- How to own and issue a Kitty NFT
-- How to view owned Kitties
+- Write a struct to store details about our Kitties
+- Implement the Randomness trait to create unique Kitties
+- Use `StorageValue` and `StorageMap` to create the remainingn of your pallet's storage items 
 
-### [3. Interacting with your Kitties](interacting-functions)
+### [3. Dispatchables and Events](extrinsics-and-events)
+- Write a dispatchable that updates runtime storage using a helper function
+- Write and use pallet Events
 
-- How to set a price for each Kitty
-- How to transfer a Kitty 
-- How to buy a Kitty
-- How to breed new Kitties
+### [4. Interacting with your Kitties](interacting-functions)
 
-### [4. Viewing Kitties in a UI](kitties-frontend)
+- Write a dispatchable to set the price for a Kitty
+- Create a transfer capabilities for a Kitty 
+- Write a dispatchable to buy a Kitty
+- Write a dispatchable to breed two Kitties
 
-- How to build React components for our functions
-- How to connect our node to a front-end (custom types)
+### [5. Viewing Kitties in a UI](kitties-frontend)
+
+- Connect your chain to the Substrate front-end template
+- Use PolkadotJS API to customize the frontend
+- Interact with your chain 
 

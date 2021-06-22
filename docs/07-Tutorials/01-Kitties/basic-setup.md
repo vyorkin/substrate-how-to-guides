@@ -13,12 +13,18 @@ If you haven't already, head over to our [installation guide][installation].
 
 ## Learning outcomes
 
-Learn common patterns for Substrate runtime development.
+:arrow_right: Learn common patterns for Substrate runtime development.
+
+:arrow_right: Learn how to repurpose the Substrate Node Template.
+
+:arrow_right: Create a simple storage item to keep track of all Kitties.
 
 ## Overview
 
+In this first part, you will learn the basics of setting up a pallet and including simple storage item in your Substrate node.
+
 To get started with building our Substrate Kitties dApp we'll use Substrate's [Node Template][substrate-node-template] 
-and customize it. Specifically, we'll learn how to create a pallet with some storage items and ensure our pallet compiles.
+and customize it.
 
 ## Steps
 
@@ -39,7 +45,7 @@ For our purposes, what's important is to:
 - rename `node-template` to `substratekitties` (lines 8 and 12)
 - rename `node-template-runtime` to `kitties-runtime` 
 
-:::tip Use the side panel as a scratch pad! 
+:::tip Use the side panel as a scratch pad! [**coming soon**]
 Each part will have incomplete code with comments to guide you on completing it. Make sure to only use it as a scratch-pad 
 and copy it to your IDE &mdash; it doesn't save your work!
 :::
@@ -141,7 +147,7 @@ Get into the habit of using `./target/release/substratekitties purge-chain --dev
 Congratulations if you've made it here! We don't need to keep our node running, that was just a way to check our pallet and runtime are 
 properly configured. In the next steps we will start writing the storage items our Kitty dApp will require.
 
-### 2. Include your pallet's storage items
+### 2. Include a storage item to track all Kitties
 
 Let's add the most simple logic we can to our runtime: a function which stores a variable.
 
@@ -180,13 +186,13 @@ storage. For example, using `get()` and `put()`:
 
 From the previous step, your pallet should contain a storage item called `AllKittiesCount` which keeps track of a
 single `u64` value. As part of the basic setup, we're doing great! As mentioned in the [overview of this tutorial](overview),
-we'll be needing a total of 9 storage items which we'll discover as we write out our logic in the next section.
+we'll be needing a total of 9 storage items which we'll discover in the next part as we write out the pallet's logic.
 
 Before we move on, let's make sure everything compiles. We don't need to rebuild our entire node each time we update our pallet.
 Instead we can use a command to only build our pallet. From inside your pallet directory, run this command in your terminal:
 
 ```bash
-cargo build -p pallet_kitties
+cargo build -p pallet-kitties
 ```
 It should compile error-free. If not, go back and check that all the macros are in place and that you've included the
 FRAME dependencies.
@@ -201,9 +207,7 @@ Congratulations on finishing the first part of this tutorial! At this stage, we'
 
 - Using the Randomness trait to create unique Kitties
 - Writing a struct to store details about our Kitties
-- Creating and using pallet Events
-- Writing functions to own and issue a Kitty NFT
-- Viewing owned Kitties
+- Creating our pallet's remaining storage items
 
 [installation]: https://substrate.dev/docs/en/knowledgebase/getting-started/
 [substrate-node-template]: https://github.com/substrate-developer-hub/substrate-node-template

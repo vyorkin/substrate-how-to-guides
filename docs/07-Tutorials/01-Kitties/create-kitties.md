@@ -4,14 +4,18 @@ keywords: pallet design, intermediate, runtime
 code: code/kitties-tutorial/02-create-kitties.rs
 ---
 
-# Part II: Create, view and own Kitties
+# Part II: Create unique Kitties and their storage items
 In this part of the tutorial, we'll build out the components of our pallet 
 needed to manage the creation and ownership of our Kitties.
 
 ## Learning outcomes
 
-- Writing a struct to store details about our Kitties
-- Using the Randomness trait to create unique Kitties
+:arrow_right: Using the Randomness trait in a helper function.
+
+:arrow_right: Writing a custom struct and using them in storage.
+
+:arrow_right: Adding and using `StorageMap` items to a pallet.
+
 ## Overview
 
 
@@ -189,7 +193,7 @@ fn increment_nonce() -> DispatchResult {
 :::tip Your turn!
 
 Feel free to use the code snippets above in your pallet. Make sure to 
-include the `Nonce` storage item among the storage items, and the 
+include the `Nonce` storage item among the section with your other storage items, and the 
 `increment_nonce()` function in the helper function section.
 :::
 #### Unique Kitty ID

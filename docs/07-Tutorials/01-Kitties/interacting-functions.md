@@ -6,9 +6,9 @@ keywords: pallet design, intermediate, runtime
 # Part IV: Interacting with your Kitties
 _This is tutorial steps you through building a fully functional dapp for managing Substrate Kitties._
 
-## Goal
+## Learning outcomes
 
-Learn how to create the dispatchable functions for the Kitty pallet.
+:arrow_right: Learn how to create a dispatchable function and reusable helper functions.
 ## Overview
 
 With parts I, II and III of this tutorial, we've build the core components of our NFT chain. Users can now create and track ownership of
@@ -58,7 +58,7 @@ resolve the possibility that it returns `None`. This could be
 caused by bad user input or even some sort of problem with our 
 runtime. Checking will help prevent these kinds of problems.
 
-An ownership check for our module will look something like this:
+An ownership check for our pallet will look something like this:
 
 ```rust
 let owner = Self::owner_of(object_id).ok_or("No owner for this object")?;
@@ -79,7 +79,7 @@ ensure!(<MyObject<T>>::exists(object_id));
 ```
 
 :::tip Your turn! 
-You now have all the tools necessary to write the `set_price` dispatchable function. Remember, "verify first, write last": be sure to perform the appropriate checks before you modify storage, and don't assume that the user is giving you 
+You now have all the tools necessary to write the `set_price` dispatchable function. Remember, "_verify first, write last_": be sure to perform the appropriate checks before you modify storage, and don't assume that the user is giving you 
 good data to work with!
 :::
 
@@ -106,7 +106,7 @@ the `buy_kitty` dispatchable we're creating in the next section.
 :::
 ### 3. Buy a Kitty
 #### A. Check a Kitty is for Sale
-We can use the `set_price()` function to check if the Kitty is for sale. We've simplified things such that any Kitty with the
+We can use the `set_price()` function to check if the Kitty is for sale. Remember that we've simplified things such that any Kitty with the
 price of 0 means that the Kitty is not for sale.
 
 #### B. Making a Payment
@@ -144,7 +144,7 @@ a guide to write `buy_kitty` from scratch.
 - check that `kitty_id` corresponds to a Kitty in storage
 - check that the Kitty has an owner
 
-**Check if purchasing Kitty is authorized**
+**Check if purchasing a Kitty is authorized**
 - check that the account buying the Kitty doesn't already own it
 - check that the price of the Kitty is not zero (if it is, throw an error)
 - check that the Kitty price is not greater than `ask_price`

@@ -8,8 +8,9 @@ _Write the first dispatchable function that creates a Kitty using a private func
 
 ## Learning outcomes
 
-- Write a dispatchable that updates storage items using a helper function
-- Write and use pallet Events
+:arrow_right: Write a dispatchable that updates storage items using a helper function.
+
+:arrow_right: Write and use pallet Events.
 
 ## Overview
 In the previous section of this tutorial, we laid down the foundations geared to manage the ownership of our Kitties &mdash; when they
@@ -156,9 +157,11 @@ specifc event using this pattern:
 Self::deposit_event(Event::Success(var_time, var_day)); 
 ```
 
-:::note Notice that each event deposit is meant to be somewhat informative which is why it carries the various types associated with it. 
+:::note Notice that each event deposit is meant to be informative which is why it carries the various types associated with it. 
 
-Get in the habit of documenting your event declaration so that your code is easy to read. It is convention to document events as such: `/// Description. [types]`. Learn more about events [here][events-rustdocs].
+Get in the habit of documenting your event declaration so that your code is easy to read. It is convention to document events as such: `/// Description. [types]`. 
+
+Learn more about events [here][events-rustdocs].
 :::
 
 :::tip Your turn!
