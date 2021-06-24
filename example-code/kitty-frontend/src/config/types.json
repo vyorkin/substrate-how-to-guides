@@ -1,0 +1,17 @@
+{
+  "AccountInfo": {
+    "nonce": "Index",
+    "consumers": "RefCount",
+    "providers": "RefCount",
+    "data": "AccountData"
+  },
+  "Gender": {
+    "_enum": ["Male", "Female"]
+  },
+  "Kitty": {
+    "id": "Hash",
+    "dna": "Hash",
+    "price": "Balance",
+    "gender": "Gender"
+  }
+}
