@@ -42,7 +42,7 @@ use pallet_transaction_payment::CurrencyAdapter;
 /// Import the template pallet.
 pub use pallet_template;
 pub use mint_token;
-pub use pallet_kitties;
+// pub use pallet_kitties;
 pub use configurable_constant;
 
 /// An index to a block.
@@ -291,10 +291,10 @@ impl pallet_sudo::Config for Runtime {
 //     type ClearFrequency = ClearFrequency;
 // }
 
-impl pallet_kitties::Config for Runtime {
-    type Event = Event;
-	type Randomness = RandomnessCollectiveFlip;
-}
+// impl pallet_kitties::Config for Runtime {
+//     type Event = Event;
+// 	type Randomness = RandomnessCollectiveFlip;
+// }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
@@ -315,7 +315,7 @@ construct_runtime!(
 		//TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
 		//MintSupply: mint_token::{Module, Call, Storage, Event<T>},
 		//ConfigConstants: configurable_constant::{Module, Call, Storage, Event<T>},
-		SubstrateKitties: pallet_kitties::{Module, Call, Config<T>, Storage, Event<T>},
+		// SubstrateKitties: pallet_kitties::{Module, Call, Config<T>, Storage, Event<T>},
 	}
 );
 
